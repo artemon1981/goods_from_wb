@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     app_title: str = "Получение информации о товарах с WB"
     redis_url: str
+    api_url: str
     api_token: str
     DB_HOST: str
     DB_PORT: str

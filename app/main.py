@@ -43,8 +43,18 @@ async def fetch_product_from_wb(
                 'nm_id': nm_id,
                 "current_price": product_info["salePriceU"] / 100,
                 "sum_quantity": product_info["totalQuantity"],
-                "quantity_by_sizes": [size["origName"] for size in product_info["sizes"]]
+                "quantity_by_sizes": [
+            {
+                "size": size["origName"],
+                "quantity_by_wh": [
+                    {"wh": stock["wh"], "quantity": stock["qty"]}
+                    for stock in size["stocks"]
+                ]
             }
+            for size in product_info["sizes"] if size["stocks"]
+        ]
+    }
+
 
     return product_data
 

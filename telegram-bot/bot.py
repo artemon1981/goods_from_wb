@@ -1,45 +1,100 @@
 import logging
+import os
 
-import aiohttp
-from aiogram import Bot, Dispatcher, types
+from redis.asyncio import Redis
+import httpx
+from aiogram import Bot, Dispatcher,  types
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
-API_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
-FASTAPI_URL = 'http://fastapi:8000/'
+API_TOKEN = os.getenv("BOT_TOKEN")
+REDIS_URL = os.getenv("REDIS_URL")
 
 logging.basicConfig(level=logging.INFO)
 
+# Настройка бота
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
-@dp.message_handler(commands=['start'])
+# Настройка Redis
+redis = Redis.from_url(REDIS_URL)
+
+
+async def rate_limit(user_id: int, limit: int = 60):
+    """
+    Проверка и установка ограничения частоты запросов.
+    """
+    if await redis.exists(f"rate_limit:{user_id}"):
+        return False
+    await redis.set(f"rate_limit:{user_id}", 1, ex=limit)
+    return True
+
+
+@dp.message_handler(commands=["start", "help"])
 async def send_welcome(message: types.Message):
-    await message.reply("Привет пришли мне id товара, я скажу тебе об остатках на складе.")
+    """
+    Отправка сообщения при использовании команд `/start` or `/help`.
+    """
+    await message.reply("Привет! Отправь мне ID товара (nm_id), и я расскажу тебе о нём. ")
+
+
 
 @dp.message_handler()
-async def fetch_product(message: types.Message):
-    product_id = message.text.strip()
-    if not product_id.isdigit():
-        await message.reply("Пришли корректное id.")
-        return
+async def product_info_handler(message: types.Message):
+    """Обработка запросов пользователей."""
+    try:
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{FASTAPI_URL}{product_id}") as response:
-            if response.status == 200:
-                product = await response.json()
-                product_details = (
-                    f"Товар: {product.nm_id}\n"
-                    f"Цена: {product.current_price} руб.\n"
-                    f"Остатки на складах: {product.sum_quantity}\n"
-                    f"Размеры: {product.quantity_by_sizes}"
-                )
-                await message.reply(product_details)
-            else:
-                await message.reply("Продукт не найден.")
+        nm_id = int(message.text.strip())
+
+        if not nm_id.isdigit():
+            await message.answer("Пожалуйста, отправьте корректный ID товара.")
+            return
+
+        user_id = message.from_user.id
+
+        if not await rate_limit(user_id):
+            await message.answer("Слишком много запросов! Подождите минуту.")
+            return
+
+
+
+            url = f"{os.getenv('API_URL')}{nm_id}"
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url)
+
+            if response.status_code != 200:
+                raise Exception("Товар не найден")
+            product_info = response.json()
+
+            nm_id = product_info["nm_id"]
+            price = product_info["current_price"]
+            sum_quantity = product_info["sum_quantity"]
+
+            details = []
+            for size_info in product_info["quantity_by_sizes"]:
+                size = size_info["size"]
+                details.append(f"*Размер: {size}*")
+                for wh_info in size_info["quantity_by_wh"]:
+                    details.append(
+                        f"    Склад: {wh_info['wh']}, "
+                        f"Остаток: {wh_info['quantity']}"
+                    )
+            details_str = "\n".join(details)
+
+            response_message = (
+                f"Товар с артикулом: {nm_id}\n"
+                f"Текущая цена: {price:} руб.\n"
+                f"Остаток: {sum_quantity} шт.\n"
+                f"Детали по размерам и складам:\n{details_str}"
+            )
+
+        await message.answer(response_message, parse_mode="Markdown")
+    except Exception as e:
+        await message.answer(f"Ошибка: {str(e)}")
 
 if __name__ == "__main__":
     dp.run_polling(bot)
