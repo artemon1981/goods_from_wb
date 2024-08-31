@@ -88,19 +88,4 @@ async def get_product(nm_id: int, session: AsyncSession = Depends(get_async_sess
     return product
 
 
-@shared_task
-def update_all_products():
-    """
-    Задача Celery для обновления всех продуктов в базе данных. Получает все идентификаторы продуктов (nm_id)
-    из базы данных и обновляет информацию о каждом продукте с Wildberries.
-    """
 
-    async def update():
-        async with get_async_session() as session:
-            result = await session.execute(select(Product.nm_id))
-            nm_ids = result.scalars().all()
-
-            for nm_id in nm_ids:
-                await fetch_product_from_wb(nm_id, session)
-
-    asyncio.run(update())
