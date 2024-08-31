@@ -1,11 +1,22 @@
-FROM python:3.9-slim
+FROM python:3.10
 
-WORKDIR /app
+WORKDIR /fastapi
 
+# Скопируйте файл с зависимостями
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt --no-cache-dir
 
-COPY . .
+# Проверка наличия файлов до копирования
+RUN ls -la /fastapi
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"] \
-     && ["celery", "-A", "my_celery_config", "worker", "--loglevel=info"]
+# Копируем код приложения
+COPY ./app /fastapi/app
+COPY ./alembic /fastapi/alembic
+COPY alembic.ini /fastapi/alembic.ini
+
+# Проверка наличия файлов после копирования
+RUN ls -la /fastapi
+RUN ls -la /fastapi/app
+RUN ls -la /fastapi/alembic
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

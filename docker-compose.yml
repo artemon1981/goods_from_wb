@@ -2,10 +2,7 @@ version: '3.8'
 
 services:
   fastapi:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fastapi_app
+    build: ./app/
     ports:
       - "8000:8000"
     env_file: .env
@@ -14,9 +11,7 @@ services:
       - redis
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: ./app/
     entrypoint: celery
     command: -A app.celery.celery_app worker --loglevel=info
     env_file: .env
@@ -26,38 +21,10 @@ services:
       - redis
       - db
 
-  beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    entrypoint: celery
-    command: -A app.celery.celery_app beat --loglevel=info
-    env_file: .env
-    links:
-      - redis
-    depends_on:
-      - redis
-      - db
 
-  flower:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    entrypoint: sh -c "sleep 10 && celery -A app.celery.celery_app flower --loglevel=info"
-    env_file: .env
-    links:
-      - redis
-      - worker
-    depends_on:
-      - redis
-      - worker
-    ports:
-      - "5555:5555"
 
   bot:
-    build:
-      context: .
-      dockerfile: bot.Dockerfile
+    build: ./telegram-bot/
     container_name: telegram_bot
     env_file: .env
     depends_on:
@@ -73,8 +40,7 @@ services:
 
   redis:
     image: redis:latest
-    ports:
-      - "6379:6379"
+
 
 volumes:
   postgres_data:

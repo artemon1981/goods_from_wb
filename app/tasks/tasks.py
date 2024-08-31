@@ -1,12 +1,9 @@
 import asyncio
 
-from app.api.background_tasks import save_or_update_product
-from app.api.utils import get_product_info
-from app.celery import celery_app
-from app.core.config import settings
-from app.core.db import AsyncSessionLocal, get_async_session
-from app.crud.product import product_crud
+from sqlalchemy import select
 
+from app.celery import celery_app
+from app.core.db import get_async_session
 from app.core.models.product import Product
 from app.main import fetch_product_from_wb
 

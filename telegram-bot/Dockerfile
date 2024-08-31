@@ -1,14 +1,11 @@
+FROM python:3.10
 
-FROM python:3.9-slim
-
-WORKDIR /app
+WORKDIR /bot
 
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /bot
 
-EXPOSE 8080
-
-CMD ["python", "telegram_bot.py"]
+CMD ["python", "bot.py"]
