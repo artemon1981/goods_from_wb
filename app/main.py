@@ -15,9 +15,7 @@ from app.schemas.product import ProductSchema
 app = FastAPI(title=settings.app_title)
 
 
-async def fetch_product_from_wb(
-    nm_id: int, session: AsyncSession = Depends(get_async_session)
-):
+async def fetch_product_from_wb(nm_id: int):
     """
     Получает данные о продукте с Wildberries по идентификатору nm_id и сохраняет их в базу данных.
     """
@@ -38,6 +36,8 @@ async def fetch_product_from_wb(
                 )
 
             product_info = data["data"]["products"][0]
+
+
 
             product_data = {
                 'nm_id': nm_id,
