@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASS: str
     DB_NAME: str
+    CELERY_BROKER_URL: str
+    CELERY_RESULT_BACKEND: str
 
     @property
     def DATABASE_URL(self):
