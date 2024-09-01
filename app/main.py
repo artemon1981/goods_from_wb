@@ -1,21 +1,20 @@
-import asyncio
 import json
+from typing import Optional
 
 import aiohttp
-from celery import shared_task
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.core.config import settings
-from app.core.db import get_async_session
+from app.core.db import get_async_session, AsyncSessionLocal
 from app.core.models.product import Product
 from app.schemas.product import ProductSchema
 
 app = FastAPI(title=settings.app_title)
 
 
-async def fetch_product_from_wb(nm_id: int):
+async def fetch_product_from_wb(nm_id: int, session: Optional[AsyncSessionLocal] = None):
     """
     Получает данные о продукте с Wildberries по идентификатору nm_id и сохраняет их в базу данных.
     """
