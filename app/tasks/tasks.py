@@ -1,5 +1,5 @@
 import asyncio
-
+import logging
 from sqlalchemy import select
 
 from app.celery import celery_app
@@ -14,7 +14,7 @@ def update_all_products():
     Задача Celery для обновления всех продуктов в базе данных. Получает все идентификаторы продуктов (nm_id)
     из базы данных и обновляет информацию о каждом продукте с Wildberries.
     """
-
+    logging.info("Обновление базы данных запущено.")
     async def update():
         async with get_async_session() as session:
             result = await session.execute(select(Product.nm_id))

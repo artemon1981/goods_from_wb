@@ -25,6 +25,20 @@ services:
       - redis
       - db
 
+  beat:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    entrypoint: celery
+    command: -A app.celery.celery_app beat --loglevel=info
+    env_file: .env
+    links:
+      - redis
+    depends_on:
+      - redis
+      - db
+      - fastapi
+
   bot:
     build:
       context: ./telegram-bot/
