@@ -2,21 +2,14 @@ FROM python:3.10
 
 WORKDIR /fastapi
 
-# Скопируйте файл с зависимостями
-COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
+# Скопировать файл с зависимостями в рабочую директорию
+COPY requirements.txt /fastapi/
 
-# Проверка наличия файлов до копирования
-RUN ls -la /fastapi
+# Установить зависимости из файла
+RUN pip install -r /fastapi/requirements.txt --no-cache-dir
 
 # Копируем код приложения
 COPY ./app /fastapi/app
-COPY ./alembic /fastapi/alembic
-COPY alembic.ini /fastapi/alembic.ini
+COPY . .
 
-# Проверка наличия файлов после копирования
-RUN ls -la /fastapi
-RUN ls -la /fastapi/app
-RUN ls -la /fastapi/alembic
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000

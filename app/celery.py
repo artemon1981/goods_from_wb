@@ -7,7 +7,7 @@ celery_app = Celery(
 
 celery_app.conf.beat_schedule = {
     "update-products-every-5-minutes": {
-        "task": "app.main.update_all_products",
+        "task": "app.tasks.tasks.update_all_products",
         "schedule": 300.0,
     },
 }
