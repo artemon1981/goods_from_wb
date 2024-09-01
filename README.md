@@ -1,5 +1,7 @@
 # Система сбора данных о товарах с Wildberries
 
+[![Bears workflow](https://github.com/artemon1981/bears_test/actions/workflows/main.yml/badge.svg)](https://github.com/artemon1981/bears_test/actions/workflows/main.yml)
+
 ## Описание проекта
 
 Этот проект представляет собой систему, состоящую из двух микросервисов и базы данных, которая предназначена для получения и хранения актуальной информации о товарах с сайта wildberries.ru.
